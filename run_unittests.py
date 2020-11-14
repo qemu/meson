@@ -7456,6 +7456,22 @@ class LinuxlikeTests(BasePlatformTests):
             content = f.read()
             self.assertNotIn('-lfoo', content)
 
+    def test_prelinking(self):
+        testdir = os.path.join(self.unit_test_dir, '87 prelinking')
+        self.init(testdir)
+        self.build()
+        outlib = os.path.join(self.builddir, 'libprelinked.a')
+        ar = shutil.which('ar')
+        self.assertTrue(os.path.exists(outlib))
+        self.assertTrue(ar is not None)
+        p = subprocess.run([ar, 't', outlib],
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.DEVNULL,
+                           universal_newlines=True, timeout=1)
+        obj_files = p.stdout.strip().split('\n')
+        self.assertEqual(len(obj_files), 1)
+        self.assertTrue(obj_files[0].endswith('-prelink.o'))
+
 class BaseLinuxCrossTests(BasePlatformTests):
     # Don't pass --libdir when cross-compiling. We have tests that
     # check whether meson auto-detects it correctly.
