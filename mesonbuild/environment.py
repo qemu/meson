@@ -179,7 +179,7 @@ def detect_ninja(version: str = '1.7', log: bool = False) -> T.List[str]:
     r = detect_ninja_command_and_version(version, log)
     return r[0] if r else None
 
-def detect_ninja_command_and_version(version: str = '1.7', log: bool = False) -> (T.List[str], str):
+def detect_ninja_command_and_version(version: str = '1.10.1', log: bool = False) -> (T.List[str], str):
     from .dependencies.base import ExternalProgram
     env_ninja = os.environ.get('NINJA', None)
     for n in [env_ninja] if env_ninja else ['ninja', 'ninja-build', 'samu']:
