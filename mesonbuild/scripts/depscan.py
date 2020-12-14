@@ -15,12 +15,23 @@
 import pathlib
 import pickle
 import re
+import os
+import sys
 import typing as T
 
 from ..backend.ninjabackend import TargetDependencyScannerInfo
+from ..compilers.compilers import lang_suffixes
 
-import_re = re.compile('\w*import ([a-zA-Z0-9]+);')
-export_re = re.compile('\w*export module ([a-zA-Z0-9]+);')
+cpp_import_re = re.compile('\w*import ([a-zA-Z0-9]+);')
+cpp_export_re = re.compile('\w*export module ([a-zA-Z0-9]+);')
+
+FORTRAN_INCLUDE_PAT = r"^\s*#?include\s*['\"](\w+\.\w+)['\"]"
+FORTRAN_MODULE_PAT = r"^\s*\bmodule\b\s+(\w+)\s*(?:!+.*)*$"
+FORTRAN_SUBMOD_PAT = r"^\s*\bsubmodule\b\s*\((\w+:?\w+)\)\s*(\w+)"
+FORTRAN_USE_PAT = r"^\s*use,?\s*(?:non_intrinsic)?\s*(?:::)?\s*(\w+)"
+
+fortran_module_re = re.compile(FORTRAN_MODULE_PAT)
+fortran_use_re = re.compile(FORTRAN_USE_PAT)
 
 class DependencyScanner:
     def __init__(self, pickle_file: str, outfile: str, sources: T.List[str]):
@@ -34,9 +45,19 @@ class DependencyScanner:
         self.sources_with_exports = [] # type: T.List[str]
     
     def scan_file(self, fname: str) -> None:
-        for line in pathlib.Path(fname).read_text().split('\n'):
-            import_match = import_re.match(line)
-            export_match = export_re.match(line)
+        suffix = os.path.splitext(fname)[1][1:]
+        if suffix in lang_suffixes['fortran']:
+            self.scan_fortran_file(fname)
+        elif suffix in lang_suffixes['cpp']:
+            self.scan_fortran_file(fname)
+        else:
+            sys.exit('Can not scan files with suffix .{}.'.format(suffix))
+
+    def scan_fortran_file(self, fname: str) -> None:
+        fpath = pathlib.Path(fname)
+        for line in fpath.read_text().split('\n'):
+            import_match = fortran_use_re.match(line)
+            export_match = fortran_module_re.match(line)
             if import_match:
                 needed = import_match.group(1)
                 if fname in self.needs:
@@ -51,13 +72,37 @@ class DependencyScanner:
                 self.provided_by[exported_module] = fname
                 self.exports[fname] = exported_module
 
+    def scan_cpp_file(self, fname: str) -> None:
+        fpath = pathlib.Path(fname)
+        for line in fpath.read_text().split('\n'):
+            import_match = cpp_import_re.match(line)
+            export_match = cpp_export_re.match(line)
+            if import_match:
+                needed = import_match.group(1)
+                if fname in self.needs:
+                    self.needs[fname].append(needed)
+                else:
+                    self.needs[fname] = [needed]
+            if export_match:
+                exported_module = export_match.group(1)
+                if exported_module in self.provided_by:
+                    raise RuntimeError('Multiple files provide module {}.'.format(exported_module))
+                self.sources_with_exports.append(fname)
+                self.provided_by[exported_module] = fname
+                self.exports[fname] = exported_module
     def objname_for(self, src: str) -> str:
         objname = self.target_data.source2object[src]
         assert(isinstance(objname, str))
         return objname
 
-    def ifcname_for(self, src: str) -> str:
-        return '{}.ifc'.format(self.exports[src])
+    def module_name_for(self, src: str) -> str:
+        suffix= os.path.splitext(src)[1][1:]
+        if suffix in lang_suffixes['fortran']:
+            return os.path.join(self.target_data.private_dir, '{}.mod'.format(self.exports[src]))
+        elif suffix in lang_suffixes['cpp']:
+            return '{}.ifc'.format(self.exports[src])
+        else:
+            raise RuntimeError('Unreachable code.')
 
     def scan(self) -> int:
         for s in self.sources:
@@ -67,15 +112,15 @@ class DependencyScanner:
             for src in self.sources:
                 objfilename = self.objname_for(src)
                 if src in self.sources_with_exports:
-                    ifc_entry = '| ' + self.ifcname_for(src)
+                    ifc_entry = '| ' + self.module_name_for(src)
                 else:
                     ifc_entry = ''
                 if src in self.needs:
                     # FIXME, handle all sources, not just the first one
                     modname = self.needs[src][0]
                     provider_src = self.provided_by[modname]
-                    provider_ifc = self.ifcname_for(provider_src)
-                    mod_dep = '| ' + provider_ifc
+                    provider_modfile = self.module_name_for(provider_src)
+                    mod_dep = '| ' + provider_modfile
                 else:
                     mod_dep = ''
                 ofile.write('build {} {}: dyndep {}\n'.format(objfilename,
