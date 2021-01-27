@@ -1,4 +1,4 @@
-# Copyright 2012-2019 The Meson development team
+# Copyright 2012-2021 The Meson development team
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -3169,9 +3169,24 @@ external dependencies (including libraries) must go to "dependencies".''')
         if not self.is_subproject():
             self.build.project_name = proj_name
         self.active_projectname = proj_name
-        self.project_version = kwargs.get('version', 'undefined')
-        if not isinstance(self.project_version, str):
-            raise InvalidCode('The version keyword argument must be a string.')
+        version = kwargs.get('version', 'undefined')
+        if isinstance(version, list):
+            if len(version) != 1:
+                raise InvalidCode('Version argument is an array with more than one entry.')
+            version = version[0]
+        if isinstance(version, mesonlib.File):
+            self.add_build_def_file(version)
+            ifname = version.absolute_path(self.environment.source_dir,
+                                           self.environment.build_dir)
+            try:
+                with open(ifname, 'r') as versionfile:
+                    self.project_version = versionfile.readline().strip()
+            except FileNotFoundError:
+                raise InterpreterException('Version file not found.')
+        elif isinstance(version, str):
+            self.project_version = version
+        else:
+            raise InvalidCode('The version keyword argument must be a string or a file.')
         if self.build.project_version is None:
             self.build.project_version = self.project_version
         proj_license = mesonlib.stringlistify(kwargs.get('license', 'unknown'))
