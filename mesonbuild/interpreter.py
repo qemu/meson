@@ -2431,7 +2431,7 @@ class Interpreter(InterpreterBase):
             self.sanity_check_ast()
         self.builtin.update({'meson': MesonMain(build, self)})
         self.generators = []
-        self.visited_subdirs = {}
+        self.processed_buildfiles = {}
         self.project_args_frozen = False
         self.global_args_frozen = False  # implies self.project_args_frozen
         self.subprojects = {}
@@ -4272,10 +4272,11 @@ This will become a hard error in the future.''' % kwargs['input'], location=self
             raise InvalidArguments('Subdir argument must be a relative path.')
         absdir = os.path.join(self.environment.get_source_dir(), subdir)
         symlinkless_dir = os.path.realpath(absdir)
-        if symlinkless_dir in self.visited_subdirs:
+        build_file = os.path.join(symlinkless_dir, 'meson.build')
+        if build_file in self.processed_buildfiles:
             raise InvalidArguments('Tried to enter directory "%s", which has already been visited.'
                                    % subdir)
-        self.visited_subdirs[symlinkless_dir] = True
+        self.processed_buildfiles[build_file] = True
         self.subdir = subdir
         os.makedirs(os.path.join(self.environment.build_dir, subdir), exist_ok=True)
         buildfilename = os.path.join(self.subdir, environment.build_filename)
