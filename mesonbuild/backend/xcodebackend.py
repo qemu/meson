@@ -1256,6 +1256,7 @@ class XCodeBackend(backends.Backend):
             if args:
                 quoted_args = []
                 for a in args:
+                    a = a.replace(r'"', r'\\\"')
                     if ' ' in a:
                         a = r'\"' + a + r'\"'
                     quoted_args.append(a)
