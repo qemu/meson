@@ -1,4 +1,4 @@
-# Copyright 2012-2016 The Meson development team
+# Copyright 2012-2021 The Meson development team
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,6 +26,63 @@ from . import mconf, mdist, minit, minstall, mintro, msetup, mtest, rewriter, ms
 from .mesonlib import MesonException
 from .environment import detect_msys2_arch
 from .wrap import wraptool
+
+bat_template = '''@ECHO OFF
+
+call "{}"
+
+ECHO ---SPLIT---
+SET
+'''
+
+# If on Windows and VS is installed but not set up in the environment,
+# set it to be runnable. In this way Meson can be directly invoked
+# from any shell, VS Code etc.
+def setup_vsenv():
+    import subprocess, json, pathlib
+    if not mesonlib.is_windows():
+        return
+    if 'Visual Studio' in os.environ['PATH']:
+        return
+    vswhere_bin = r'c:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe'
+    if not os.path.exists(vswhere_bin):
+        return
+    vsjson = subprocess.check_output([vswhere_bin, '-latest', '-format', 'json'])
+    vsinfo = json.loads(vsjson)
+    if not vsinfo:
+        vsjson = subprocess.check_output([vswhere_bin, '-prerelease', '-format', 'json'])
+        vsinfo = json.loads(vsjson)
+    if not vsinfo:
+        # VS installer instelled but not VS itself maybe?
+        return
+    vs_root = vsinfo[0]['installationPath']
+    bat_path = vs_root + r'\VC\Auxiliary\Build\vcvars64.bat'
+    if not os.path.exists(bat_path):
+        #sys.exit(f'Could not find {bat_path}.')
+        return
+
+    bat_file = pathlib.Path.home() / 'vsdetect.bat'
+
+    bat_contents = bat_template.format(bat_path)
+    try:
+        bat_file.write_text(bat_contents)
+        bat_output = subprocess.check_output(bat_file, universal_newlines=True)
+    finally:
+        bat_file.unlink()
+    bat_lines = bat_output.split('\n')
+    bat_separator_seen = False
+    bat_separator = '---SPLIT---'
+    for bat_line in bat_lines:
+        if bat_line == bat_separator:
+            bat_separator_seen = True
+            continue
+        if not bat_separator_seen:
+            continue
+        if not bat_line:
+            continue
+        k, v = bat_line.split('=', 1)
+        os.environ[k] = v
+
 
 
 # Note: when adding arguments, please also add them to the completion
@@ -222,6 +279,7 @@ def run(original_args, mainfile):
     return CommandLineParser().run(args)
 
 def main():
+    setup_vsenv()
     # Always resolve the command path so Ninja can find it for regen, tests, etc.
     if 'meson.exe' in sys.executable:
         assert(os.path.isabs(sys.executable))
