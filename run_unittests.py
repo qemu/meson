@@ -5702,6 +5702,11 @@ class AllPlatformTests(BasePlatformTests):
                 link_args = env.coredata.get_external_link_args(cc.for_machine, cc.language)
                 self.assertEqual(sorted(link_args), sorted(['-flto']))
 
+    def test_overrides(self):
+        testdir = os.path.join(self.unit_test_dir, '96 overriding')
+        native_file = os.path.join(testdir, 'native_overrides.txt')
+        self.init(testdir, extra_args=['--native-file', native_file])
+
 class FailureTests(BasePlatformTests):
     '''
     Tests that test failure conditions. Build files here should be dynamically

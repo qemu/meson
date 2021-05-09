@@ -374,6 +374,22 @@ class DependencyCache:
     def clear(self) -> None:
         self.__cache.clear()
 
+
+class OptionOverrides:
+    def __init__(self):
+        self.subproject_overrides = {} # Overrides option value in all subprojects but not the main project.
+        # FIXME add per-project overrides here
+
+    def add_subprojects_override(self, key, value):
+        self.subproject_overrides[key] = value
+
+    def value_if_overridden(self, key, subproject): # FIXME add target as an argument?
+        if subproject == '':
+            return None
+        if key not in self.subproject_overrides:
+            return None
+        return self.subproject_overrides[key]
+
 # Can't bind this near the class method it seems, sadly.
 _V = T.TypeVar('_V')
 
@@ -400,6 +416,7 @@ class CoreData:
         self.options: 'KeyedOptionDictType' = {}
         self.cross_files = self.__load_config_files(options, scratch_dir, 'cross')
         self.compilers = PerMachine(OrderedDict(), OrderedDict())  # type: PerMachine[T.Dict[str, Compiler]]
+        self.overrides = OptionOverrides()
 
         # Set of subprojects that have already been initialized once, this is
         # required to be stored and reloaded with the coredata, as we don't
@@ -415,6 +432,7 @@ class CoreData:
         self.config_files = self.__load_config_files(options, scratch_dir, 'native')
         self.builtin_options_libdir_cross_fixup()
         self.init_builtins('')
+        self.init_overrides()
 
     @staticmethod
     def __load_config_files(options: argparse.Namespace, scratch_dir: str, ftype: str) -> T.List[str]:
@@ -540,6 +558,11 @@ class CoreData:
         for for_machine in iter(MachineChoice):
             for key, opt in BUILTIN_OPTIONS_PER_MACHINE.items():
                 self.add_builtin_option(self.options, key.evolve(subproject=subproject, machine=for_machine), opt)
+
+    def init_overrides(self) -> None:
+        sections = MachineFileParser(self.config_files).sections
+        for k, v in sections.get('override_subprojects', {}).items():
+            self.overrides.add_subprojects_override(k, v)
 
     @staticmethod
     def add_builtin_option(opts_map: 'KeyedOptionDictType', key: OptionKey,
