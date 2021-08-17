@@ -62,6 +62,7 @@ if T.TYPE_CHECKING:
     from mesonbuild.environment import Environment
     from mesonbuild._typing import Protocol
     from concurrent.futures import Future
+    from mesonbuild.modules.python import PythonIntrospectionDict
 
     class CompilerArgumentType(Protocol):
         cross_file: str
@@ -122,6 +123,8 @@ class TestResult(BaseException):
     def fail(self, msg: str) -> None:
         self.msg = msg
 
+python_info: 'PythonIntrospectionDict'
+
 class InstalledFile:
     def __init__(self, raw: T.Dict[str, str]):
         self.path = raw['file']
@@ -143,6 +146,14 @@ class InstalledFile:
                 (env.machines.host.is_windows() and compiler in {'pgi', 'dmd', 'ldc'})):
             canonical_compiler = 'msvc'
 
+        global python_info
+        if not globals().get('python_info'):
+            from mesonbuild.modules.python import PythonExternalProgram
+            python_info = PythonExternalProgram(sys.executable).sanity().info
+
+        python_paths = python_info['install_paths']
+        python_suffix = python_info['suffix']
+
         has_pdb = False
         if self.language in {'c', 'cpp'}:
             has_pdb = canonical_compiler == 'msvc'
@@ -161,6 +172,15 @@ class InstalledFile:
             return None
 
         # Handle the different types
+        if self.typ in {'py_implib', 'python_lib', 'python_file'}:
+            val = p.as_posix()
+            val = val.replace('@PYTHON_PLATLIB@', python_paths['platlib'])
+            val = val.replace('@PYTHON_PURELIB@', python_paths['purelib'])
+            if self.typ == 'python_file':
+                return Path(val)
+            p = Path(val).with_suffix(python_suffix)
+            if self.typ == 'python_lib':
+                return p
         if self.typ in ['file', 'dir']:
             return p
         elif self.typ == 'shared_lib':
@@ -195,7 +215,7 @@ class InstalledFile:
             if self.version:
                 p = p.with_name('{}-{}'.format(p.name, self.version[0]))
             return p.with_suffix('.pdb') if has_pdb else None
-        elif self.typ == 'implib' or self.typ == 'implibempty':
+        elif self.typ in {'implib', 'implibempty', 'py_implib'}:
             if env.machines.host.is_windows() and canonical_compiler == 'msvc':
                 # only MSVC doesn't generate empty implibs
                 if self.typ == 'implibempty' and compiler == 'msvc':
