@@ -1171,7 +1171,12 @@ class Backend:
             elif isinstance(i, build.GeneratedList):
                 fname = [os.path.join(self.get_target_private_dir(target), p) for p in i.get_outputs()]
             elif isinstance(i, build.ExtractedObjects):
-                fname = [os.path.join(self.get_target_private_dir(i.target), p) for p in i.get_outputs(self)]
+                outputs = i.get_outputs(self)
+                if self.name == 'xcode':
+                    # Xcode is stupid and requires a completely different naming scheme.
+                    fname = outputs
+                else:
+                    fname = [os.path.join(self.get_target_private_dir(i.target), p) for p in outputs]
             else:
                 fname = [i.rel_to_builddir(self.build_to_src)]
             if target.absolute_paths:
