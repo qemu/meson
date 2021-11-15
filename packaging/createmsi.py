@@ -174,7 +174,8 @@ class PackageGenerator:
         for m in modules:
             pyinst_cmd += ['--hidden-import', m]
         # https://github.com/pyinstaller/pyinstaller/issues/5693
-        pyinst_cmd += ['--exclude-module', '_bootlocale']
+        if sys.version_info[1] >= 10:
+            pyinst_cmd += ['--exclude-module', '_bootlocale']
         pyinst_cmd += ['meson.py']
         subprocess.check_call(pyinst_cmd)
         shutil.move(pyinstaller_tmpdir + '/meson', main_stage)
