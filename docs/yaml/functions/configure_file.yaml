@@ -39,6 +39,13 @@ kwargs:
       file objects and more than one file can be passed to the `input` keyword
       argument, see [[custom_target]] for details about string
       substitutions.
+      
+  configuration:
+    type: "[[@cfg_data]] | Dict"
+    description: |
+      As explained above, when passed this will provide the replacement
+      data for the input file (if provided) or key value pairs to be 
+      written to the output.
 
   copy:
     type: bool
