@@ -41,7 +41,7 @@ kwargs:
       substitutions.
       
   configuration:
-    type: "configuration_data | dict"
+    type: "cfg_data | dict[str | int | bool]"
     description: |
       As explained above, when passed this will provide the replacement
       data for the input file (if provided) or key value pairs to be 
