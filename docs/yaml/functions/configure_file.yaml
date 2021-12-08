@@ -41,7 +41,7 @@ kwargs:
       substitutions.
       
   configuration:
-    type: "[[@cfg_data]] | Dict"
+    type: "configuration_data | dict"
     description: |
       As explained above, when passed this will provide the replacement
       data for the input file (if provided) or key value pairs to be 
