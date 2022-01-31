@@ -490,7 +490,6 @@ class ConsoleLogger(TestLogger):
     RTRI = "\u25B6 "
 
     def __init__(self) -> None:
-        self.update = asyncio.Event()
         self.running_tests = OrderedSet()  # type: OrderedSet['TestRun']
         self.progress_test = None          # type: T.Optional['TestRun']
         self.progress_task = None          # type: T.Optional[asyncio.Future]
@@ -572,7 +571,6 @@ class ConsoleLogger(TestLogger):
             while not self.stop:
                 await self.update.wait()
                 self.update.clear()
-
                 # We may get here simply because the progress line has been
                 # overwritten, so do not always switch.  Only do so every
                 # second, or if the printed test has finished
@@ -1520,7 +1518,8 @@ class TestHarness:
         self.name_max_len = 0
         self.is_run = False
         self.loggers = []         # type: T.List[TestLogger]
-        self.loggers.append(ConsoleLogger())
+        self.console_logger = ConsoleLogger()
+        self.loggers.append(self.console_logger)
         self.need_console = False
 
         self.logfile_base = None  # type: T.Optional[str]
@@ -1555,6 +1554,10 @@ class TestHarness:
                 ss.add(s)
         self.suites = list(ss)
 
+    def get_console_logger(self) -> 'ConsoleLogger':
+        assert self.console_logger
+        return self.console_logger
+
     def load_tests(self, file_name: str) -> T.List[TestSerialisation]:
         datafile = Path('meson-private') / file_name
         if not datafile.is_file():
@@ -1572,6 +1575,7 @@ class TestHarness:
     def close_logfiles(self) -> None:
         for l in self.loggers:
             l.close()
+        self.console_logger = None
 
     def get_test_setup(self, test: T.Optional[TestSerialisation]) -> build.TestSetup:
         if ':' in self.options.setup:
