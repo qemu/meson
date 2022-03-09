@@ -3378,7 +3378,12 @@ class AllPlatformTests(BasePlatformTests):
         md_commands = {k for k,v in md_command_sections.items()}
 
         help_output = self._run(self.meson_command + ['--help'])
-        help_commands = {c.strip() for c in re.findall(r'usage:(?:.+)?{((?:[a-z]+,*)+?)}', help_output, re.MULTILINE|re.DOTALL)[0].split(',')}
+        self.assertTrue(help_output.startswith('usage: '))
+        line1 = help_output.split('\n')[0]
+        cmndstr = line1.split('{')[1]
+        self.assertTrue(cmndstr.endswith('} ...'))
+        help_commands = cmndstr.split('}')[0].split(',')
+        self.assertTrue(len(help_commands) > 0)
 
         self.assertEqual(md_commands | {'help'}, help_commands, f'Doc file: `{doc_path}`')
 
