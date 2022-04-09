@@ -410,6 +410,8 @@ class PythonExternalProgram(ExternalProgram):
         # Sanity check, we expect to have something that at least quacks in tune
         cmd = self.get_command() + ['-c', INTROSPECT_COMMAND]
         p, stdout, stderr = mesonlib.Popen_safe(cmd)
+        if p.returncode != 0:
+            raise mesonlib.MesonException('Trying to introspect Python configuration failed.\n\n'  + stdout + stderr)
         try:
             info = json.loads(stdout)
         except json.JSONDecodeError:
