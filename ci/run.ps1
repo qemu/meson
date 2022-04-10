@@ -54,9 +54,12 @@ echo "Extracting ci_data.zip"
 Expand-Archive $env:AGENT_WORKFOLDER\ci_data.zip -DestinationPath $env:AGENT_WORKFOLDER\ci_data
 & "$env:AGENT_WORKFOLDER\ci_data\install.ps1" -Arch $env:arch -Compiler $env:compiler -Boost $true -DMD $dmd
 
-DownloadFile -Source https://downloads.python.org/pypy/pypy3.8-v7.3.9-win64.zip -Destination $env:AGENT_WORKFOLDER\pypy38.zip
-Expand-Archive $env:AGENT_WORKFOLDER\pypy38.zip -DestinationPath $env:AGENT_WORKFOLDER\pypy38
-$ENV:Path = $ENV:Path + ";$ENV:AGENT_WORKFOLDER\pypy38\pypy3.8-v7.3.9-win64;$ENV:AGENT_WORKFOLDER\pypy38\pypy3.8-v7.3.9-win64\Scripts"
+if ($env:arch -eq 'x64') {
+    DownloadFile -Source https://downloads.python.org/pypy/pypy3.8-v7.3.9-win64.zip -Destination $env:AGENT_WORKFOLDER\pypy38.zip
+    Expand-Archive $env:AGENT_WORKFOLDER\pypy38.zip -DestinationPath $env:AGENT_WORKFOLDER\pypy38
+    $ENV:Path = $ENV:Path + ";$ENV:AGENT_WORKFOLDER\pypy38\pypy3.8-v7.3.9-win64;$ENV:AGENT_WORKFOLDER\pypy38\pypy3.8-v7.3.9-win64\Scripts"
+    pypy3 -m ensurepip
+}
 
 
 echo "=== PATH BEGIN ==="
@@ -71,7 +74,6 @@ foreach ($prog in $progs) {
   where.exe $prog
 }
 
-pypy3 -m ensurepip
 
 echo ""
 echo "Ninja / MSBuld version:"
