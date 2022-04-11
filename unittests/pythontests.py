@@ -14,6 +14,9 @@
 
 import os
 import unittest
+import tempfile
+import pathlib
+import subprocess
 
 from run_tests import (
     Backend
@@ -43,3 +46,17 @@ class PythonTests(BasePlatformTests):
         with self.assertRaises(unittest.SkipTest):
             self.init(testdir, extra_args=['-Dpython=dir'])
         self.wipe()
+
+    def test_dist(self):
+        with tempfile.TemporaryDirectory() as dirstr:
+            dirobj = pathlib.Path(dirstr)
+            mesonfile = dirobj / 'meson.build'
+            mesonfile.write_text('''project('test', 'c', version: '1')
+pymod = import('python')
+python = pymod.find_installation('python3', required: true)
+''')
+            subprocess.check_call(['git', 'init'], cwd=dirobj)
+            subprocess.check_call(['git', 'add', 'meson.build'], cwd=dirobj)
+            subprocess.check_call(['git', 'commit', '-a', '-m', 'message'], cwd=dirobj)
+            self.init(dirobj)
+            subprocess.check_call(self.meson_command + ['dist', '-C', self.builddir])
