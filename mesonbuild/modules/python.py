@@ -551,6 +551,8 @@ class PythonInstallation(ExternalProgramHolder):
             if required and not dep.found():
                 raise mesonlib.MesonException('Python dependency not found')
 
+        if dep.found():
+            mlog.debug(f'found a python: {dep.link_args=}, {dep.compile_args=}')
         return dep
 
     @typed_pos_args('install_data', varargs=(str, mesonlib.File))
