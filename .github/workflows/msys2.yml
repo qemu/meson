@@ -87,16 +87,22 @@ jobs:
         run: |
           mkdir pypy3local
           pushd pypy3local
-          wget https://downloads.python.org/pypy/pypy3.8-v7.3.9-win64.zip
+          wget -nv https://downloads.python.org/pypy/pypy3.8-v7.3.9-win64.zip
           unzip pypy3.8-v7.3.9-win64.zip
           mv pypy3.8-v7.3.9-win64/* ./
           popd
-          echo $PWD\pypy3local | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          pypy3 -m ensurepip
         if: ${{ matrix.MSYS2_ARCH == 'x86_64' }}
 
       - name: Run Tests
         run: |
+          if [[ "${{ matrix.MSYS2_ARCH }}" == "x86_64" ]]; then
+            # There apparently is no clean way to add to the PATH in the 
+            # previous step?
+            # See for instance https://github.com/msys2/setup-msys2/issues/171
+            export PATH=$PATH:$PWD/pypy3local
+            # Make sure it is on the PATH
+            pypy3 -c "import sys; print(sys.version)"
+          fi
           export BOOST_ROOT=
           export PATHEXT="$PATHEXT;.py"
 
