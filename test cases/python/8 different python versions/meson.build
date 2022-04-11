@@ -23,6 +23,7 @@ if py.found()
       py,
       args : files('blaster.py'),
       env : ['PYTHONPATH=' + pypathdir])
+    test('autofail', py, args: ['-c', 'raise SystemExit("dump logs")'])
   else
     error('MESON_SKIP_TEST: Python libraries not found, skipping test.')
   endif
