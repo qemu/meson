@@ -65,6 +65,8 @@ jobs:
             git
             mercurial
             lcov
+            wget
+            unzip
             mingw-w64-${{ matrix.MSYS2_ARCH }}-cmake
             mingw-w64-${{ matrix.MSYS2_ARCH }}-glib2
             mingw-w64-${{ matrix.MSYS2_ARCH }}-libxml2
@@ -80,6 +82,18 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip --disable-pip-version-check install gcovr jsonschema pefile pytest pytest-subtests pytest-xdist coverage codecov
+
+      - name: Install pypy3 on x86_64
+        run: |
+          mkdir pypy3local
+          pushd pypy3local
+          wget https://downloads.python.org/pypy/pypy3.8-v7.3.9-win64.zip
+          unzip pypy3.8-v7.3.9-win64.zip
+          mv pypy3.8-v7.3.9-win64/* ./
+          popd
+          echo $PWD\pypy3local | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          pypy3 -m ensurepip
+        if: ${{ matrix.MSYS2_ARCH == 'x86_64' }}
 
       - name: Run Tests
         run: |
