@@ -27,14 +27,22 @@ from mesonbuild.coredata import version as meson_version
 
 def get_pypath():
     import sysconfig
-    pypath = sysconfig.get_path('purelib', vars={'base': ''})
+    pypath = sysconfig.get_path('purelib', vars={'base': ''}).replace('dist-packages', 'site-packages')
     # Ensure that / is the path separator and not \, then strip /
+    # Starting with Python 3.10 the Debian installation returns paths like
+    # '/usr/local', even though it does the installation to just ''/usr'.
+    if pypath.startswith('/local'):
+        pypath = pypath.split('/', 2)[-1]
     return Path(pypath).as_posix().strip('/')
 
 def get_pybindir():
     import sysconfig
     # 'Scripts' on Windows and 'bin' on other platforms including MSYS
-    return sysconfig.get_path('scripts', vars={'base': ''}).strip('\\/')
+    # See above for note about Python 3.10.
+    raw_path = sysconfig.get_path('scripts', vars={'base': ''})
+    if raw_path.startswith('/local'):
+        return raw_path.split('/', 2)[-1]
+    return raw_path.strip('\\/')
 
 class CommandTests(unittest.TestCase):
     '''
