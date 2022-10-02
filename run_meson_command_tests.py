@@ -31,8 +31,6 @@ if hasattr(sysconfig, 'get_default_scheme'):
     scheme = sysconfig.get_default_scheme()
 else:
     scheme = sysconfig._get_default_scheme()
-if scheme == 'posix_local':
-    scheme = 'posix_prefix'
 
 def get_pypath():
     pypath = sysconfig.get_path('purelib', scheme=scheme, vars={'base': ''})
