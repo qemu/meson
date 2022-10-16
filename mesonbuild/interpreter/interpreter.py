@@ -408,6 +408,7 @@ class Interpreter(InterpreterBase, HoldableObject):
                            'join_paths': self.func_join_paths,
                            'library': self.func_library,
                            'message': self.func_message,
+                           'opaque_target': self.func_opaque_target,
                            'option': self.func_option,
                            'project': self.func_project,
                            'range': self.func_range,
@@ -1983,6 +1984,24 @@ class Interpreter(InterpreterBase, HoldableObject):
             backend=self.backend)
         self.add_target(tg.name, tg)
         return tg
+
+    def func_opaque_target(self, node: mparser.FunctionNode, args: T.Tuple[str],
+                           kwargs: 'kwtypes.OpaqueTarget') -> build.CustomTarget:
+        if len(args) != 1:
+            raise InterpreterException('Opaque_target takes exactly one positional argument.')
+        opaque_data = mesonlib.get_opaque_data(self.subproject, args[0])
+        kwargs['output'] = opaque_data.stamp
+        kwargs['depfile'] = opaque_data.dep
+        integration_args = ['--stamp=@OUTPUT@', 
+                            '--dep=@DEPFILE@',
+                            '--scratch=' + opaque_data.scratch,
+                            '--out=' + opaque_data.out,
+                            '--']
+        kwargs['command'] = listify(kwargs['command']) + integration_args + kwargs['args']
+        del kwargs['args']
+        ct = self.func_custom_target(node, args, kwargs)
+        ct.is_opaque = True
+        return ct
 
     @typed_pos_args('run_target', str)
     @typed_kwargs(
