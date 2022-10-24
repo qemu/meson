@@ -98,7 +98,16 @@ class PlatformAgnosticTests(BasePlatformTests):
         self.setconf('-Dfoo=enabled')
         self.build('reconfigure')
 
+    def check_connectivity(self):
+        import urllib
+        try:
+            with urrlib.urlopen('https://wrapdb.mesonbuild.com') as p:
+                pass
+        except:
+            skipTest('No internet connectivity.')
+
     def test_update_wrapdb(self):
+        self.check_connectivity()
         # Write the project into a temporary directory because it will add files
         # into subprojects/ and we don't want to pollute meson source tree.
         with tempfile.TemporaryDirectory() as testdir:
