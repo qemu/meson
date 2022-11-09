@@ -164,6 +164,10 @@ def detect_cross_debianlike(options: T.Any) -> MachineInfo:
     host_cpu = cpu_map.get(data['DEB_HOST_ARCH'],
                            data['DEB_HOST_ARCH'])
     host_endian = data['DEB_HOST_ARCH_ENDIAN']
+    try:
+        cmake = locate_path("cmake")
+    except ValueError:
+        cmake = None
 
     compilerstems = [('c', 'gcc'),
                      ('cpp', 'g++'),
@@ -177,6 +181,8 @@ def detect_cross_debianlike(options: T.Any) -> MachineInfo:
     infos.binaries['strip'] = locate_path("%s-strip" % host_arch)
     infos.binaries['objcopy'] = locate_path("%s-objcopy" % host_arch)
     infos.binaries['ld'] = locate_path("%s-ld" % host_arch)
+    if cmake:
+        infos.binaries['cmake'] = cmake
     try:
         infos.binaries['pkgconfig'] = locate_path("%s-pkg-config" % host_arch)
     except ValueError:
@@ -217,6 +223,8 @@ def write_machine_file(infos: MachineInfo, ofilename: str, write_system_info: bo
                 write_args_line(ofile, lang + '_args', infos.compile_args[lang])
             if lang in infos.link_args:
                 write_args_line(ofile, lang + '_link_args', infos.link_args[lang])
+        for k, v in infos.properties.items():
+            write_args_line(ofile, k, v)
         ofile.write('\n')
 
         if write_system_info:
