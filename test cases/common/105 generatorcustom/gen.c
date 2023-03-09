@@ -22,9 +22,14 @@ int main(int argc, const char ** argv) {
     fprintf(output, "#pragma once\n");
     fprintf(output, "#define ");
 
-    char c;
+    int bytes_copied = 0;
+    int c;
     while((c = fgetc(input)) != EOF) {
         fputc(c, output);
+        if(++bytes_copied > 10000) {
+            fprintf(stderr, "File copy stuck in an eternal loop!\n");
+            return 1;
+        }
     }
     fputc('\n', output);
 
