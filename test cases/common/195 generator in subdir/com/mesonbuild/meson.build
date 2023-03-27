@@ -1,4 +1,4 @@
-gprog = find_program('genprog.py')
+gprog = find_program('../../genprog.py')
 
 gen = generator(gprog, \
   output    : ['@BASENAME@.c', '@BASENAME@.h'],
