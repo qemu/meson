@@ -606,6 +606,7 @@ class Backend:
         can_use_env = not force_serialize
         force_serialize = force_serialize or bool(reasons)
 
+        mlog.log(f'exe={exe!r}')
         if capture:
             reasons.append('to capture output')
         if feed:
@@ -654,6 +655,7 @@ class Backend:
         digest = hasher.hexdigest()
         scratch_file = f'meson_exe_{basename}_{digest}.dat'
         exe_data = os.path.join(self.environment.get_scratch_dir(), scratch_file)
+        mlog.log(f'scratch_file={scratch_file!r} exe_data={exe_data!r}')
         with open(exe_data, 'wb') as f:
             pickle.dump(es, f)
         return (self.environment.get_build_command() + ['--internal', 'exe', '--unpickle', exe_data],
