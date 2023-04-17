@@ -161,6 +161,42 @@ These are provided by the `.system()` method call.
 Any string not listed above is not guaranteed to remain stable in
 future releases.
 
+## Kernel names (since 1.2.0)
+
+Native names as returned by the `.kernel()` method.
+
+| Value               | Comment                         |
+| -----               | -------                         |
+| linux   | |
+| freebsd | |
+| openbsd | |
+| windows | |
+| xnu                 | Kernel of various Apple OSes    |
+
+
+## Userland names (since 1.2.0)
+
+Native names as returned by the `.userland()` method.
+
+| Value               | Comment                          |
+| -----               | -------                          |
+| gnu                 | Linux or Hurd                    |
+| musl                | Linux using Musl libc            |
+| macos               | The OS formerly known as Mac OSX |
+| freebsd | |
+| openbsd | |
+| windows | |
+
+Recommended cross build names for systems that can not run Meson
+natively.
+
+| Value               | Comment                         |
+| -----               | -------                         |
+| ios                 | Apple iOS                       |
+| tvos                | Apple tvOS                      |
+| watchos             | Apple watchOS                   |
+| ipados              | Apple iPadOS                    |
+
 ## Language arguments parameter names
 
 These are the parameter names for passing language specific arguments to your build target.

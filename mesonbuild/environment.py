@@ -395,6 +395,29 @@ def detect_cpu(compilers: CompilersDict) -> str:
     # detect_cpu_family() above.
     return trial
 
+kernel_mappings = {'freebsd': 'freebsd',
+                   'openbsd': 'openbsd',
+                   'windows': 'windows',
+                   'android': 'linux',
+                   'cygwin': 'windows',
+                   'darwin': 'xnu',
+                   }
+
+userland_mappings = {'freebsd': 'freebsd',
+                     'openbsd': 'openbsd',
+                     'windows': 'windows',
+                     'darwin': 'macos',
+                     'gnu': 'gnu',
+                     }
+
+def detect_kernel(system: str) -> T.Optional[str]:
+    return kernel_mappings.get(system, None)
+
+def detect_userland(system: str) -> T.Optional[str]:
+    if system == 'linux':
+        return 'gnu' # Fixme, check whether we are on a glibc system.
+    return userland_mappings.get(system, None)
+
 def detect_system() -> str:
     if sys.platform == 'cygwin':
         return 'cygwin'
@@ -411,11 +434,14 @@ def detect_machine_info(compilers: T.Optional[CompilersDict] = None) -> MachineI
     underlying ''detect_*'' method can be called to explicitly use the
     partial information.
     """
+    system = detect_system()
     return MachineInfo(
-        detect_system(),
+        system,
         detect_cpu_family(compilers) if compilers is not None else None,
         detect_cpu(compilers) if compilers is not None else None,
-        sys.byteorder)
+        sys.byteorder,
+        detect_kernel(system),
+        detect_userland(system))
 
 # TODO make this compare two `MachineInfo`s purely. How important is the
 # `detect_cpu_family({})` distinction? It is the one impediment to that.
