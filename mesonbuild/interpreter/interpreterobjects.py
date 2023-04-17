@@ -639,6 +639,8 @@ class MachineHolder(ObjectHolder['MachineInfo']):
                              'cpu': self.cpu_method,
                              'cpu_family': self.cpu_family_method,
                              'endian': self.endian_method,
+                             'kernel': self.kernel_method,
+                             'userland': self.userland_method,
                              })
 
     @noPosargs
@@ -660,6 +662,17 @@ class MachineHolder(ObjectHolder['MachineInfo']):
     @noKwargs
     def endian_method(self, args: T.List[TYPE_var], kwargs: TYPE_kwargs) -> str:
         return self.held_object.endian
+
+    @noPosargs
+    @noKwargs
+    def kernel_method(self, args: T.List[TYPE_var], kwargs: TYPE_kwargs) -> str:
+        return self.held_object.kernel
+
+    @noPosargs
+    @noKwargs
+    def userland_method(self, args: T.List[TYPE_var], kwargs: TYPE_kwargs) -> str:
+        return self.held_object.userland
+
 
 class IncludeDirsHolder(ObjectHolder[build.IncludeDirs]):
     pass
