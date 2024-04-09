@@ -1234,6 +1234,7 @@ def _run_tests(all_tests: T.List[T.Tuple[str, T.List[TestDef], bool]],
         current_suite = ET.SubElement(junit_root, 'testsuite', {'name': name, 'tests': str(len(test_cases))})
         if skipped:
             futures += [LogRunFuture(['\n', bold(f'Not running {name} tests.'), '\n'])]
+            continue
         else:
             futures += [LogRunFuture(['\n', bold(f'Running {name} tests.'), '\n'])]
 
