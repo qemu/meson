@@ -339,7 +339,10 @@ class PkgConfigDependency(ExternalDependency):
             elif arg.startswith(('-L', '-I')) or (len(arg) > 2 and arg[1] == ':'):
                 # clean out improper '\\ ' as comes from some Windows pkg-config files
                 arg = arg.replace('\\ ', ' ')
+            else:
+                tmpl = None
             if len(pargs) > 1 and len(pargs[1]) == 1:
+                assert(tmpl is not None)
                 arg = tmpl.format(pargs[1], '/'.join(pargs[2:]))
             converted.append(arg)
         return converted

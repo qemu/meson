@@ -19,6 +19,7 @@ def run_clang_format(fname: Path, exelist: T.List[str], check: bool, cformat_ver
         if version_compare(cformat_ver, '>=10'):
             clangformat_10 = True
             exelist = exelist + ['--dry-run', '--Werror']
+            original = b''
         else:
             original = fname.read_bytes()
     before = fname.stat().st_mtime
