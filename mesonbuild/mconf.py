@@ -14,6 +14,7 @@ import collections
 
 from . import build
 from . import coredata
+from . import options
 from . import environment
 from . import mesonlib
 from . import mintro
@@ -223,18 +224,18 @@ class Conf:
         self._add_line(mlog.normal_yellow(section + ':'), '', '', '')
         self.print_margin = 2
 
-    def print_options(self, title: str, options: 'coredata.KeyedOptionDictType') -> None:
-        if not options:
+    def print_options(self, title: str, opts: 'coredata.KeyedOptionDictType') -> None:
+        if not opts:
             return
         if title:
             self.add_title(title)
-        auto = T.cast('coredata.UserFeatureOption', self.coredata.options[OptionKey('auto_features')])
-        for k, o in sorted(options.items()):
+        auto = T.cast('options.UserFeatureOption', self.coredata.options[OptionKey('auto_features')])
+        for k, o in sorted(opts.items()):
             printable_value = o.printable_value()
             root = k.as_root()
             if o.yielding and k.subproject and root in self.coredata.options:
                 printable_value = '<inherited from main project>'
-            if isinstance(o, coredata.UserFeatureOption) and o.is_auto():
+            if isinstance(o, options.UserFeatureOption) and o.is_auto():
                 printable_value = auto.printable_value()
             self.add_option(str(root), o.description, printable_value, o.choices)
 
@@ -255,7 +256,7 @@ class Conf:
         if not self.default_values_only:
             mlog.log('  Build dir ', self.build_dir)
 
-        dir_option_names = set(coredata.BUILTIN_DIR_OPTIONS)
+        dir_option_names = set(options.BUILTIN_DIR_OPTIONS)
         test_option_names = {OptionKey('errorlogs'),
                              OptionKey('stdsplit')}
 
