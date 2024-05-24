@@ -5,6 +5,7 @@ from collections import OrderedDict
 from itertools import chain
 from functools import total_ordering
 import argparse
+import re
 
 from .mesonlib import (
     HoldableObject,
@@ -672,6 +673,17 @@ BUILTIN_DIR_NOPREFIX_OPTIONS: T.Dict[OptionKey, T.Dict[str, str]] = {
     OptionKey('python.purelibdir'): {},
 }
 
+OPTNAME_REGEX = r'(P<build>build\.)?(P<subproject>[^:]*:)?(P<name>.*)'
+OPTNAME_AND_VALUE_REGEX = OPTNAME_REGEX + r'=(P<value>.*)'
+OPTNAME_SPLITTER = re.compile(OPTNAME_REGEX)
+OPTNAME_AND_VALUE_SPLITTER = re.compile(OPTNAME_AND_VALUE_REGEX)
+
+class OptionParts:
+    def __init__(self, name, subproject=None, for_build=None):
+        self.name = name
+        self.subproject = subproject
+        self.for_build = for_build
+
 class OptionStore:
     def __init__(self):
         self.d: T.Dict['OptionKey', 'UserOption[T.Any]'] = {}
@@ -681,20 +693,30 @@ class OptionStore:
         from .compilers import all_languages
         for lang in all_languages:
             self.all_languages.add(lang)
+        self.build_options = None
 
-    def __len__(self):
-        return len(self.d)
+    def form_canonical_keystring(self, name, subproject=None, for_build=None):
+        strname = name
+        if subproject is not None:
+            strname = f'{subproject}:{strname}'
+        if for_build:
+            strname = 'build.' + strname
+        return strname
 
-    def ensure_key(self, key: T.Union[OptionKey, str]) -> OptionKey:
-        if isinstance(key, str):
-            return OptionKey(key)
-        return key
+    def split_keystring(self, option_str):
+        m = re.fullmatch(OPNAME_SPLITTER, option_str)
+        for_build = True if 'build' in m.groupdict() else None
+        subproject = m.groupdict().get('subproject', None)
+        name = m['name']
+        return OptionParts(name, subproject, for_build)
 
-    def get_value_object(self, key: T.Union[OptionKey, str]) -> 'UserOption[T.Any]':
-        return self.d[self.ensure_key(key)]
+    def add_system_option(self, name, value_object):
+        cname = self.form_canonical_keystring(name)
+        self.options[cname] = value_object
 
-    def get_value(self, key: T.Union[OptionKey, str]) -> 'T.Any':
-        return self.get_value_object(key).value
+    def add_project_option(self, name, subproject, keystr, value_object):
+        cname = self.form_canonical_keystring(name, subproject)
+        self.options[keystr] = value_object
 
     def add_system_option(self, key: T.Union[OptionKey, str], valobj: 'UserOption[T.Any]'):
         key = self.ensure_key(key)
@@ -809,3 +831,7 @@ class OptionStore:
 
     def is_module_option(self, key: OptionKey) -> bool:
         return key in self.module_options
+
+    def get_value_for(self, name, subproject=None):
+        cname = self.form_canonical_keystring(name, subproject)
+        return self.options[cname].value
