@@ -1061,9 +1061,9 @@ class Interpreter(InterpreterBase, HoldableObject):
                     return v
 
         try:
-            opt = self.coredata.optstore[key]
+            opt = self.coredata.optstore.get_value_object(key)
             if opt.yielding and key.subproject and key.as_root() in self.coredata.optstore:
-                popt = self.coredata.optstore[key.as_root()]
+                popt = self.coredata.optstore.get_value_object(key.as_root())
                 if type(opt) is type(popt):
                     opt = popt
                 else:
@@ -1543,7 +1543,7 @@ class Interpreter(InterpreterBase, HoldableObject):
             if self.subproject:
                 options = {}
                 for k in comp.get_options():
-                    v = copy.copy(self.coredata.optstore[k])
+                    v = copy.copy(self.coredata.optstore.get_value_object(k))
                     k = k.evolve(subproject=self.subproject)
                     options[k] = v
                 self.coredata.add_compiler_options(options, lang, for_machine, self.environment, self.subproject)

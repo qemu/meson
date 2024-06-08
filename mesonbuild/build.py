@@ -1243,7 +1243,7 @@ class BuildTarget(Target):
         if kwargs.get(arg) is not None:
             val = T.cast('bool', kwargs[arg])
         elif k in self.environment.coredata.optstore:
-            val = self.environment.coredata.optstore[k].value
+            val = self.environment.coredata.optstore.get_value(k)
         else:
             val = False
 

@@ -322,9 +322,9 @@ def get_base_compile_args(options: 'KeyedOptionDictType', compiler: 'Compiler', 
     if option_enabled(compiler.base_options, options, OptionKey('b_bitcode')):
         args.append('-fembed-bitcode')
     try:
-        crt_val = options[OptionKey('b_vscrt')].value
-        buildtype = options[OptionKey('buildtype')].value
         try:
+            crt_val = options.get_value(OptionKey('b_vscrt'))
+            buildtype = options.get_value(OptionKey('buildtype'))
             args += compiler.get_crt_compile_args(crt_val, buildtype)
         except AttributeError:
             pass
@@ -390,9 +390,9 @@ def get_base_link_args(options: 'KeyedOptionDictType', linker: 'Compiler',
             args.extend(linker.get_allow_undefined_link_args())
 
     try:
-        crt_val = options[OptionKey('b_vscrt')].value
-        buildtype = options[OptionKey('buildtype')].value
         try:
+            crt_val = options.get_value(OptionKey('b_vscrt'))
+            buildtype = options.get_value(OptionKey('buildtype'))
             args += linker.get_crt_link_args(crt_val, buildtype)
         except AttributeError:
             pass

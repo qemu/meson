@@ -481,13 +481,36 @@ class OptionStore:
     def __len__(self):
         return len(self.d)
 
-    def __setitem__(self, key, value):
-        self.d[key] = value
+    def ensure_key(self,key: T.Union[OptionKey, str]) -> OptionKey:
+        if isinstance(key, str):
+            return OptionKey(key)
+        return key
 
-    def __getitem__(self, key):
-        return self.d[key]
+    def get_value_object(self, key: T.Union[OptionKey, str]) -> 'UserOption[T.Any]':
+        return self.d[self.ensure_key(key)]
 
-    def __delitem__(self, key):
+    def get_value(self, key: T.Union[OptionKey, str]) -> 'T.Any':
+        return self.get_value_object(key).value
+
+    def add_system_option(self, key: T.Union[OptionKey, str], valobj: 'UserOption[T.Any'):
+        key = self.ensure_key(key)
+        self.d[key] = valobj
+
+    def add_project_option(self, key: T.Union[OptionKey, str], valobj: 'UserOption[T.Any]'):
+        key = self.ensure_key(key)
+        self.d[key] = valobj
+
+    def set_value(self, key: T.Union[OptionKey, str], new_value: 'T.Any') -> bool:
+        key  = self.ensure_key(key)
+        return self.d[key].set_value(new_value)
+
+    # FIXME, this should be removed.
+    def set_value_object(self, key: T.Union[OptionKey, str], new_object: 'UserOption[T.Any]') -> bool:
+        key  = self.ensure_key(key)
+        self.d[key] = new_object
+
+
+    def remove(self, key):
         del self.d[key]
 
     def __contains__(self, key):
