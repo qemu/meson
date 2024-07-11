@@ -3758,9 +3758,9 @@ class AllPlatformTests(BasePlatformTests):
 
               User defined options
                 backend        : ''' + self.backend_name + '''
+                enabled_opt    : enabled
                 libdir         : lib
                 prefix         : /usr
-                enabled_opt    : enabled
                 python         : ''' + sys.executable + '''
             ''')
         expected_lines = expected.split('\n')[1:]
@@ -3770,6 +3770,8 @@ class AllPlatformTests(BasePlatformTests):
             if e.startswith('    external dep'):
                 self.assertRegex(o, r'^    external dep   : (YES [0-9.]*|NO)$')
             else:
+                if o != e:
+                    pass
                 self.assertEqual(o, e)
 
     def test_meson_compile(self):
