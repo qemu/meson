@@ -951,6 +951,8 @@ class OptionsView(abc.Mapping):
     def set_value(self, key: T.Union[str, OptionKey], value: T.Union[str, int, bool, T.List[str]]):
         if isinstance(key, str):
             key = OptionKey(key)
+        if self.overrides is None:
+            self.overrides = {}
         self.overrides[key] = value
 
     def __iter__(self) -> T.Iterator[OptionKey]:
