@@ -699,7 +699,7 @@ class FeatureNew(FeatureCheckBase):
         ]
         if self.extra_message:
             args.append(self.extra_message)
-        mlog.warning(*args, location=location)
+        mlog.deprecation(*args, location=location)
 
 class FeatureDeprecated(FeatureCheckBase):
     """Checks for deprecated features"""
