@@ -1968,7 +1968,7 @@ class Interpreter(InterpreterBase, HoldableObject):
             vcs = mesonlib.detect_vcs(source_dir)
             if vcs:
                 mlog.log('Found {} repository at {}'.format(vcs['name'], vcs['wc_dir']))
-                vcs_cmd = vcs['get_rev'].split()
+                vcs_cmd = vcs['get_rev']
                 regex_selector = vcs['rev_regex']
             else:
                 vcs_cmd = [' '] # executing this cmd will fail in vcstagger.py and force to use the fallback string

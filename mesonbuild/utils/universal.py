@@ -751,13 +751,13 @@ def windows_detect_native_arch() -> str:
             raise EnvironmentException('Unable to detect native OS architecture')
     return arch
 
-def detect_vcs(source_dir: T.Union[str, Path]) -> T.Optional[T.Dict[str, str]]:
+def detect_vcs(source_dir: T.Union[str, Path]) -> T.Optional[T.Dict[str, T.Union[str, T.List[T.str]]]]:
     vcs_systems = [
         {
             'name': 'git',
             'cmd': 'git',
             'repo_dir': '.git',
-            'get_rev': 'git describe --dirty=+ --always',
+            'get_rev': ['git describe', '--dirty=+', '--always'],
             'rev_regex': '(.*)',
             'dep': '.git/logs/HEAD'
         },
@@ -765,7 +765,7 @@ def detect_vcs(source_dir: T.Union[str, Path]) -> T.Optional[T.Dict[str, str]]:
             'name': 'mercurial',
             'cmd': 'hg',
             'repo_dir': '.hg',
-            'get_rev': 'hg id -i',
+            'get_rev': ['hg', 'id', '-i'],
             'rev_regex': '(.*)',
             'dep': '.hg/dirstate'
         },
@@ -773,7 +773,7 @@ def detect_vcs(source_dir: T.Union[str, Path]) -> T.Optional[T.Dict[str, str]]:
             'name': 'subversion',
             'cmd': 'svn',
             'repo_dir': '.svn',
-            'get_rev': 'svn info',
+            'get_rev': ['svn', 'info'],
             'rev_regex': 'Revision: (.*)',
             'dep': '.svn/wc.db'
         },
@@ -781,7 +781,7 @@ def detect_vcs(source_dir: T.Union[str, Path]) -> T.Optional[T.Dict[str, str]]:
             'name': 'bazaar',
             'cmd': 'bzr',
             'repo_dir': '.bzr',
-            'get_rev': 'bzr revno',
+            'get_rev': ['bzr', 'revno'],
             'rev_regex': '(.*)',
             'dep': '.bzr'
         },
@@ -795,7 +795,9 @@ def detect_vcs(source_dir: T.Union[str, Path]) -> T.Optional[T.Dict[str, str]]:
     parent_paths_and_self.appendleft(source_dir)
     for curdir in parent_paths_and_self:
         for vcs in vcs_systems:
-            if Path.is_dir(curdir.joinpath(vcs['repo_dir'])) and shutil.which(vcs['cmd']):
+            repodir = T.cast(str, vcs['repo_dir'])
+            cmd = T.cast(str, vcs['cmd'])
+            if Path.is_dir(curdir.joinpath(repodir)) and shutil.which(cmd):
                 vcs['wc_dir'] = str(curdir)
                 return vcs
     return None
