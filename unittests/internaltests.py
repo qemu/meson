@@ -697,7 +697,10 @@ class InternalTests(unittest.TestCase):
                 prog = ExternalProgram('script', command=[python_command, str(script_path), output], silent=True)
 
                 if expected is None:
-                    with self.assertRaisesRegex(MesonException, 'Could not find a version number'):
+                    import mesonbuild.mesonlib
+                    p, o, e = mesonbuild.mesonlib.Popen_safe(python_command + [str(script_path), output])
+                    all_output =  o + '\n\n' + e
+                    with self.assertRaisesRegex(MesonException, 'Could not find a version number', msg=all_output):
                         prog.get_version()
                 else:
                     self.assertEqual(prog.get_version(), expected)
