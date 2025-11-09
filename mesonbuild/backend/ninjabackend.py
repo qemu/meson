@@ -3229,6 +3229,11 @@ https://gcc.gnu.org/bugzilla/show_bug.cgi?id=47485'''))
                                                     rel_obj)
                         self.add_build(depelem)
             commands += compiler.get_module_outdir_args(self.get_target_private_dir(target))
+
+        # C++ import std is complicated enough to get its own method.
+        istd_args, istd_dep = self.handle_cpp_import_std(target, compiler)
+        commands.extend(istd_args)
+        header_deps += istd_dep
         if extra_args is not None:
             commands.extend(extra_args)
 
@@ -3277,6 +3282,32 @@ https://gcc.gnu.org/bugzilla/show_bug.cgi?id=47485'''))
         assert isinstance(rel_obj, str)
         assert isinstance(rel_src, str)
         return (rel_obj, rel_src.replace('\\', '/'))
+
+    def handle_cpp_import_std(self, target, compiler):
+        istd_args = []
+        istd_dep = []
+        if 'cpp_importstd' not in self.environment.coredata.optstore:
+            return istd_args, istd_dep
+        if self.environment.coredata.get_option_for_target(target, 'cpp_importstd') == 'false':
+            return istd_args, istd_dep
+        # At the time of writing, all three major compilers work
+        # wildly differently. Keep this isolated here until things
+        # consolidate.
+        if compiler.id == 'gcc':
+            if not hasattr(self, 'istd_gen_target'):
+                mod_file = 'gcm.cache/std.gcm'
+                elem = NinjaBuildElement(self.all_outputs, mod_file, 'CUSTOM_COMMAND', [])
+                compile_args = compiler.get_option_compile_args(target, self.environment)
+                compile_args += compiler.get_option_std_args(target, self.environment)
+                compile_args += ['-c', '-fmodules', '-fmodule-only', '-fsearch-include-path', 'bits/std.cc']
+                elem.add_item('COMMAND', compiler.exelist + compile_args)
+                self.add_build(elem)
+                self.istd_gen_target = elem
+            istd_args = ['-fmodules']
+            istd_dep = [mod_file]
+            return istd_args, istd_dep
+        else:
+            raise SystemExit(f'Import std not supported on compiler {compiler.id} yet.')
 
     def add_dependency_scanner_entries_to_element(self, target: build.BuildTarget, compiler, element, src) -> None:
         if not self.should_use_dyndeps_for_target(target):
