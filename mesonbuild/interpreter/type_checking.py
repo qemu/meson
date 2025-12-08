@@ -426,6 +426,9 @@ DEPENDENCIES_KW: KwargInfo[T.List[Dependency]] = KwargInfo(
     ContainerTypeInfo(list, (Dependency, InternalDependency)),
     listify=True,
     default=[],
+    extra_types={
+        BuildTarget: lambda arg: f'Tried to use a build_target "{T.cast("BuildTarget", arg).name}" as a dependency. This should be in `link_with` or `link_whole` instead.',
+    },
 )
 
 D_MODULE_VERSIONS_KW: KwargInfo[T.List[T.Union[str, int]]] = KwargInfo(
@@ -713,6 +716,7 @@ _BUILD_TARGET_KWS: T.List[KwargInfo] = [
     *_ALL_TARGET_KWS,
     *_LANGUAGE_KWS,
     BT_SOURCES_KW,
+    DEPENDENCIES_KW,
     INCLUDE_DIRECTORIES.evolve(name='d_import_dirs'),
     _NAME_PREFIX_KW,
     _NAME_PREFIX_KW.evolve(name='name_suffix', validator=_name_suffix_validator),
