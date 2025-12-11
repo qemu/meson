@@ -711,6 +711,15 @@ _PCH_ARGS: KwargInfo[T.List[str]] = KwargInfo(
 )
 
 
+LINK_ARGS_KW: KwargInfo[T.List[str]] = KwargInfo(
+    'link_args',
+    ContainerTypeInfo(list, str),
+    default=[],
+    listify=True,
+    as_default=[('', ('1.10.1', "Replace an empty string with an empty array: `link_args : ''` -> `link_args : []`"))],
+)
+
+
 # Applies to all build_target classes except jar
 _BUILD_TARGET_KWS: T.List[KwargInfo] = [
     *_ALL_TARGET_KWS,
@@ -718,6 +727,7 @@ _BUILD_TARGET_KWS: T.List[KwargInfo] = [
     BT_SOURCES_KW,
     DEPENDENCIES_KW,
     INCLUDE_DIRECTORIES.evolve(name='d_import_dirs'),
+    LINK_ARGS_KW,
     _NAME_PREFIX_KW,
     _NAME_PREFIX_KW.evolve(name='name_suffix', validator=_name_suffix_validator),
     RUST_CRATE_TYPE_KW,
