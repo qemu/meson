@@ -1029,6 +1029,11 @@ class CrossFileTests(BasePlatformTests):
     @skip_if_not_language('rust')
     @skipIfNoExecutable('bindgen')
     def test_bindgen_finds_target_in_clang_options(self) -> None:
+        import platform
+        # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1132495
+        if platform.machine() == 'aarch64':
+            raise SkipTest('Do not run aarch64 cross compilation test on aarch64 itself.')
+
         testcase = os.path.join(self.unit_test_dir, '135 minimal bindgen')
 
         def check_target(include: T.Optional[str], exclude: T.Optional[str] = None) -> None:
