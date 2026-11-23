@@ -70,8 +70,25 @@ def check_symlinks():
     # to be created on the fly.
     for f in Path('test cases').glob('**/*'):
         if f.is_symlink():
+            # DO
+            # **NOT**
+            # ADD
+            # NEW
+            # ENTRIES
+            # HERE!
+            #
+            # THEY
+            # WILL
+            # BREAK
+            # RELEASES!
             if 'boost symlinks/boost/lib' in str(f):
                 continue
+            # DO
+            # NOT
+            # ADD
+            # THEM
+            # HERE
+            # EITHER!
             raise SystemExit(f'Test data dir contains symlink: {f}.')
 
 
